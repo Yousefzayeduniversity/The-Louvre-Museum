@@ -1,67 +1,134 @@
 # artwork.py
 class Artwork:
-    def __init__(self, title, artist, date, significance, location):
+    def __init__(self, title, artist, date_of_creation, historical_significance):
         self.title = title
         self.artist = artist
-        self.date = date
-        self.significance = significance
-        self.location = location
+        self.date_of_creation = date_of_creation
+        self.historical_significance = historical_significance
+        self.exhibitions = []
 
-
-# exhibition.py
-from artwork import Artwork
+    def add_to_exhibition(self, exhibition):
+        self.exhibitions.append(exhibition)
 
 class Exhibition:
-    def __init__(self, name, duration, location):
-        self.name = name
+    def __init__(self, title, duration, location):
+        self.title = title
         self.duration = duration
         self.location = location
-        self.artworks = []  # list to store artworks
+        self.artworks = []
 
+    def add_artwork(self, artwork):
+        self.artworks.append(artwork)
+
+class Location:
+    def __init__(self, name):
+        self.name = name
 
 # visitor.py
 class Visitor:
-    def __init__(self, name, age, ticket_type, ticket_price):
-        self.name = name
-        self.age = age
+    def __init__(self, demographics, ticket_type):
+        self.demographics = demographics
         self.ticket_type = ticket_type
-        self.ticket_price = ticket_price
-
 
 # ticket.py
 class Ticket:
-    def __init__(self, event_name, price, type):
-        self.event_name = event_name
-        self.price = price
-        self.type = type
-# test_cases.py
-import unittest
-from artwork import Artwork
-from exhibition import Exhibition
-from visitor import Visitor
-from ticket import Ticket
+    def __init__(self, visitor_type, event):
+        self.visitor_type = visitor_type
+        self.event = event
+        self.price = 0
+    
+    def calculate_price(self):
+        if self.event == "Special Event":
+            # Special Events have individual ticket prices
+            self.price = self.calculate_special_event_price()
+        else:
+            # Regular pricing based on visitor category
+            self.price = self.calculate_regular_price()
+        
+        # Apply VAT (5%)
+        self.price *= 1.05
 
-class TestMuseumSystem(unittest.TestCase):
-    def test_add_artwork(self):
-        artwork = Artwork("Mona Lisa", "Leonardo da Vinci", "1503", "Famous portrait", "Permanent Gallery")
-        self.assertEqual(artwork.title, "Mona Lisa")
-        self.assertEqual(artwork.artist, "Leonardo da Vinci")
+    def calculate_regular_price(self):
+        if self.visitor_type == "Child" or self.visitor_type == "Senior" or self.visitor_type == "Teacher/Student":
+            # Children, seniors, and teachers/students get free tickets
+            return 0
+        elif self.visitor_type == "Group":
+            # Groups receive a 50% discount
+            return 31.5  # 50% discount on the regular price of 63 AED
+        else:
+            # Adults pay the regular price
+            return 63
+    
+    def calculate_special_event_price(self):
+        # Individual ticket prices for special events
+        # You can customize this based on specific event prices
+        # For demonstration purposes, let's assume special events have a fixed price of 100 AED
+        return 100
 
-    def test_new_exhibition(self):
-        exhibition = Exhibition("Renaissance Art", "3 months", "Exhibition Hall A")
-        self.assertEqual(exhibition.name, "Renaissance Art")
-        self.assertEqual(exhibition.duration, "3 months")
+# pricing.py
+class Pricing:
+    def __init__(self, base_price, discount):
+        self.base_price = base_price
+        self.discount = discount
 
-    def test_purchase_ticket(self):
-        ticket = Ticket("Renaissance Art Exhibition", 50, "Regular")
-        self.assertEqual(ticket.event_name, "Renaissance Art Exhibition")
-        self.assertEqual(ticket.price, 50)
-        self.assertEqual(ticket.type, "Regular")
+    def calculate_final_price(self):
+        # Include VAT calculation and discounts
+        pass
 
-    def test_visitor_info(self):
-        visitor = Visitor("John Doe", 30, "Regular", 63)
-        self.assertEqual(visitor.name, "John Doe")
-        self.assertEqual(visitor.age, 30)
+class SpecialEvent:
+    def __init__(self, title, location, duration):
+        self.title = title
+        self.location = location
+        self.duration = duration
 
-if __name__ == '__main__':
-    unittest.main()
+# Test cases
+# Test Case 1: Addition of new art to the museum
+def test_add_new_artwork():
+    artwork = Artwork("Starry Night", "Vincent van Gogh", "1889", "Post-Impressionist masterpiece")
+    exhibition = Exhibition("Post-Impressionism Exhibition", "2 months", "Gallery 2")
+    artwork.add_to_exhibition(exhibition)
+    assert len(artwork.exhibitions) == 1
+    assert artwork.exhibitions[0] == exhibition
+    print("Test case 1 passed: Addition of new art to the museum")
+
+# Test Case 2: Opening of a new exhibition or event at the museum
+def test_open_new_exhibition():
+    exhibition = Exhibition("Impressionism Exhibition", "3 months", "Gallery 3")
+    assert exhibition.title == "Impressionism Exhibition"
+    assert exhibition.duration == "3 months"
+    assert exhibition.location == "Gallery 3"
+    print("Test case 2 passed: Opening of a new exhibition")
+
+# Test Case 3: Purchase of tickets by an individual or tour group for an event
+def test_purchase_tickets():
+    ticket1 = Ticket("Adult", "Impressionism Exhibition")
+    ticket1.calculate_price()
+    assert ticket1.price == 66.15  # 63 AED + 5% VAT
+    print("Test case 3.1 passed: Purchase of adult ticket")
+
+    ticket2 = Ticket("Child", "Special Event")
+    ticket2.calculate_price()
+    assert ticket2.price == 105  # Fixed price for special event + 5% VAT
+    print("Test case 3.2 passed: Purchase of child ticket for special event")
+
+    ticket3 = Ticket("Group", "Impressionism Exhibition")
+    ticket3.calculate_price()
+    assert ticket3.price == 33.075  # 50% discount on the regular price + 5% VAT
+    print("Test case 3.3 passed: Purchase of group ticket")
+
+# Test Case 4: Display of payment receipts for purchasing tickets
+def test_display_payment_receipt():
+    pricing = Pricing(50, 0)
+    special_event = SpecialEvent("Musical Concert", "Outdoor Stage", "2 hours")
+    ticket = Ticket("Special Event", special_event.title)
+    ticket.calculate_price()
+    receipt = f"Ticket Type: {ticket.visitor_type}\nPrice: {ticket.price} AED\nEvent: {ticket.event}"
+    print("Test case 4 passed: Display of payment receipt")
+    print("Receipt:")
+    print(receipt)
+
+if __name__ == "__main__":
+    test_add_new_artwork()
+    test_open_new_exhibition()
+    test_purchase_tickets()
+    test_display_payment_receipt()
